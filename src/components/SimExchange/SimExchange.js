@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import TopBar from './TopBar';
 import Trades from './Trades';
 import Wallet from './Wallet';
+import FillOrder from './FillOrder';
 
 import './SimExchange.less';
 
@@ -48,6 +49,9 @@ class SimExchange extends Component {
             <Menu.Item key="/exchange/wallet/">
               <Link to="/exchange/wallet/">Wallet</Link>
             </Menu.Item>
+            <Menu.Item key="/exchange/fill-order/">
+              <Link to="/exchange/fill-order/">Fill Order</Link>
+            </Menu.Item>
           </Menu>
         </Sider>
         <Content className="exchange-content">
@@ -74,6 +78,11 @@ class SimExchange extends Component {
               exact
               path="/exchange/wallet/"
               render={() => <Wallet {...this.props} />}
+            />
+            <Route
+              exact
+              path="/exchange/fill-order/"
+              render={() => <FillOrder {...this.props} />}
             />
             <Redirect to="/exchange/trades/" />
           </Switch>

@@ -455,7 +455,7 @@ class DataSourceStep extends BaseStepComponent {
             Currently, Oraclize.it offers several different options for their
             data source. If you need help creating a proper oracle query, or
             availabe data sources please refer to the{' '}
-            <a href="/test" target="_blank">
+            <a href="/test" target="_blank" rel="noopener noreferrer">
               Test Query
             </a>{' '}
             page.
@@ -475,7 +475,7 @@ class DataSourceStep extends BaseStepComponent {
           <h2>Oracle Query</h2>
           <p>
             Properly structured Oraclize.it query, Please use the{' '}
-            <a href="/test" target="_blank">
+            <a href="/test" target="_blank" rel="noopener noreferrer">
               Test Query
             </a>{' '}
             page for clarification.
