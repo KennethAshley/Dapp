@@ -117,6 +117,36 @@ const getUserAccountBalanceAsync = (contract, toString) => {
     });
 };
 
+const tradeOrderAsync = signedOrderJSON => {
+  const { marketjs } = store.getState();
+  const web3 = store.getState().web3.web3Instance;
+  const signedOrder = JSON.parse(signedOrderJSON);
+
+  const txParams = {
+    from: web3.eth.coinbase
+  };
+
+  signedOrder.taker = web3.eth.coinbase;
+  signedOrder.expirationTimestamp = new BigNumber(
+    signedOrder.expirationTimestamp
+  );
+  signedOrder.makerFee = new BigNumber(signedOrder.makerFee);
+  signedOrder.orderQty = new BigNumber(signedOrder.orderQty);
+  signedOrder.price = new BigNumber(signedOrder.price);
+  signedOrder.remainingQty = new BigNumber(signedOrder.remainingQty);
+  signedOrder.takerFee = new BigNumber(signedOrder.takerFee);
+  signedOrder.salt = new BigNumber(signedOrder.salt);
+  signedOrder.ecSignature.v = parseInt(signedOrder.ecSignature.v);
+
+  console.log('signedOrder', signedOrder);
+
+  marketjs
+    .tradeOrderAsync(signedOrder, signedOrder.orderQty, txParams)
+    .then(res => {
+      return res;
+    });
+};
+
 /**
  * @param amount the amount of collateral tokens you want to deposit
  * @returns boolean
@@ -150,32 +180,6 @@ const withdrawCollateralAsync = amount => {
         return res;
       });
   });
-};
-
-const tradeOrderAsync = signedOrderJSON => {
-  const { marketjs } = store.getState();
-  const web3 = store.getState().web3.web3Instance;
-  const signedOrder = JSON.parse(signedOrderJSON);
-
-  const txParams = {
-    from: web3.eth.coinbase
-  };
-
-  signedOrder.taker = web3.eth.coinbase;
-  signedOrder.expirationTimestamp = new BigNumber(
-    signedOrder.expirationTimestamp
-  );
-  signedOrder.makerFee = new BigNumber(signedOrder.makerFee);
-  signedOrder.orderQty = new BigNumber(signedOrder.orderQty);
-  signedOrder.price = new BigNumber(signedOrder.price);
-  signedOrder.remainingQty = new BigNumber(signedOrder.remainingQty);
-  signedOrder.takerFee = new BigNumber(signedOrder.takerFee);
-
-  marketjs
-    .tradeOrderAsync(signedOrder, signedOrder.orderQty, txParams)
-    .then(res => {
-      return res;
-    });
 };
 
 export const MarketJS = {

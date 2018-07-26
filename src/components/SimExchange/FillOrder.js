@@ -40,7 +40,7 @@ class FillOrder extends Component {
             <FormItem>
               <TextArea
                 placeholder="{contractAddress: &quot;0x8a9dac478c64b2c4f62e12045a9f55b4dde473b0&quot;, expirationTimestamp: BigNumber, feeRecipient: &quot;0x0000000000000000000000000000000000000000&quot;, maker: &quot;0xce5fdef0592271c41c4ac07ddb52ae3bbb3fcb9e&quot;, makerFee: BigNumber, …}"
-                rows={4}
+                rows={6}
                 onChange={this.updateOrderJSON}
               />
             </FormItem>
