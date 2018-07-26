@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import abi from 'human-standard-token-abi';
 import moment from 'moment';
+import BigNumber from 'bignumber.js';
 
 import store from '../../store';
 
@@ -65,7 +66,7 @@ const depositCollateralAsync = amount => {
   collateralTokenContractInstance.decimals.call((err, decimals) => {
     collateralTokenContractInstance.approve(
       simExchange.contract.MARKET_COLLATERAL_POOL_ADDRESS,
-      web3.toBigNumber(toBaseUnit(amount.number, decimals)),
+      new BigNumber(toBaseUnit(amount.number, decimals)),
       txParams,
       (err, res) => {
         if (err) {
@@ -73,7 +74,11 @@ const depositCollateralAsync = amount => {
         } else {
           marketjs
             .depositCollateralAsync(
+<<<<<<< bd806ce5b22f2c71bd78a112ee6c2ac358bf2601
               simExchange.contract.key,
+=======
+              simExchange.contract.MARKET_COLLATERAL_POOL_ADDRESS,
+>>>>>>> uses imported bignumber instead of web3
               new BigNumber(toBaseUnit(amount.number, decimals)),
               txParams
             )
@@ -156,26 +161,18 @@ const tradeOrderAsync = signedOrderJSON => {
     from: web3.eth.coinbase
   };
 
-  console.log('signedOrder', signedOrder);
-
   signedOrder.taker = web3.eth.coinbase;
-  signedOrder.expirationTimestamp = web3.toBigNumber(
+  signedOrder.expirationTimestamp = new BigNumber(
     signedOrder.expirationTimestamp
   );
-  signedOrder.makerFee = web3.toBigNumber(signedOrder.makerFee);
-  signedOrder.orderQty = web3.toBigNumber(signedOrder.orderQty);
-  signedOrder.price = web3.toBigNumber(signedOrder.price);
-  signedOrder.remainingQty = web3.toBigNumber(signedOrder.remainingQty);
-  signedOrder.takerFee = web3.toBigNumber(signedOrder.takerFee);
-
-  console.log('signedOrderAfter', signedOrder);
+  signedOrder.makerFee = new BigNumber(signedOrder.makerFee);
+  signedOrder.orderQty = new BigNumber(signedOrder.orderQty);
+  signedOrder.price = new BigNumber(signedOrder.price);
+  signedOrder.remainingQty = new BigNumber(signedOrder.remainingQty);
+  signedOrder.takerFee = new BigNumber(signedOrder.takerFee);
 
   marketjs
-    .tradeOrderAsync(
-      signedOrder,
-      web3.toBigNumber(signedOrder.orderQty),
-      txParams
-    )
+    .tradeOrderAsync(signedOrder, signedOrder.orderQty, txParams)
     .then(res => {
       return res;
     });
