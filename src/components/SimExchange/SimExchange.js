@@ -56,11 +56,18 @@ class SimExchange extends Component {
         </Sider>
         <Content className="exchange-content">
           <Header className="exchange-header">
-            <TopBar
-              contract={contract}
-              contracts={contracts}
-              onSelectContract={this.props.selectContract}
-            />
+            {location.pathname !== '/exchange/fill-order/' ? (
+              <TopBar
+                contract={contract}
+                contracts={contracts}
+                onSelectContract={this.props.selectContract}
+              />
+            ) : (
+              <div>
+                <h3>Fill Order</h3>
+                <h5>Paste your ORDER JSON blob below to begin</h5>
+              </div>
+            )}
           </Header>
           <Switch>
             <Route
