@@ -113,6 +113,35 @@ const getUserAccountBalanceAsync = (contract, toString) => {
     });
 };
 
+const tradeOrderAsync = signedOrderJSON => {
+  const { marketjs } = store.getState();
+  const web3 = store.getState().web3.web3Instance;
+  const signedOrder = JSON.parse(signedOrderJSON);
+
+  const txParams = {
+    from: web3.eth.coinbase
+  };
+
+  signedOrder.expirationTimestamp = new BigNumber(
+    signedOrder.expirationTimestamp
+  );
+  signedOrder.makerFee = new BigNumber(signedOrder.makerFee);
+  signedOrder.orderQty = new BigNumber(signedOrder.orderQty);
+  signedOrder.price = new BigNumber(signedOrder.price);
+  signedOrder.remainingQty = new BigNumber(signedOrder.remainingQty);
+  signedOrder.takerFee = new BigNumber(signedOrder.takerFee);
+  signedOrder.salt = new BigNumber(signedOrder.salt);
+  signedOrder.ecSignature.v = `0x${signedOrder.ecSignature.v.toString(16)}`;
+
+  console.log('signedOrderTrade', signedOrder);
+
+  marketjs
+    .tradeOrderAsync(signedOrder, signedOrder.orderQty, txParams)
+    .then(res => {
+      return res;
+    });
+};
+
 /**
  * @param amount the amount of collateral tokens you want to deposit
  * @returns boolean
