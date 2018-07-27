@@ -131,9 +131,6 @@ const tradeOrderAsync = signedOrderJSON => {
   signedOrder.remainingQty = new BigNumber(signedOrder.remainingQty);
   signedOrder.takerFee = new BigNumber(signedOrder.takerFee);
   signedOrder.salt = new BigNumber(signedOrder.salt);
-  signedOrder.ecSignature.v = `0x${signedOrder.ecSignature.v.toString(16)}`;
-
-  console.log('signedOrderTrade', signedOrder);
 
   marketjs
     .tradeOrderAsync(signedOrder, signedOrder.orderQty, txParams)
