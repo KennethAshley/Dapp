@@ -1,6 +1,6 @@
-import BigNumber from 'bignumber.js';
 import abi from 'human-standard-token-abi';
 import moment from 'moment';
+import BigNumber from 'bignumber.js';
 
 import store from '../../store';
 
