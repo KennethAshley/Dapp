@@ -1,12 +1,13 @@
 import BigNumber from 'bignumber.js';
 import abi from 'human-standard-token-abi';
 import moment from 'moment';
-import BigNumber from 'bignumber.js';
 
 import store from '../../store';
 
 import { toBaseUnit } from '../utils';
 import showMessage from '../../components/message';
+
+import { NULL_ADDRESS } from '../../constants';
 
 // PUBLIC
 
@@ -31,14 +32,14 @@ const createSignedOrderAsync = orderData => {
     feeRecipient: '0x0000000000000000000000000000000000000000',
     maker: web3.eth.coinbase,
     makerFee: new BigNumber(0),
-    taker: '',
+    taker: NULL_ADDRESS,
     takerFee: new BigNumber(0),
     orderQty: new BigNumber(orderData.qty),
     price: new BigNumber(orderData.price),
     salt: new BigNumber(1)
   };
 
-  return marketjs.createSignedOrderAsync(...Object.values(order));
+  return marketjs.createSignedOrderAsync(...Object.values(order), true);
 };
 
 /**
@@ -65,8 +66,8 @@ const depositCollateralAsync = amount => {
 
   collateralTokenContractInstance.decimals.call((err, decimals) => {
     collateralTokenContractInstance.approve(
-      simExchange.contract.MARKET_COLLATERAL_POOL_ADDRESS,
-      new BigNumber(toBaseUnit(amount.number, decimals)),
+      simExchange.contract.key,
+      web3.toBigNumber(toBaseUnit(amount.number, decimals)),
       txParams,
       (err, res) => {
         if (err) {
@@ -125,6 +126,7 @@ const tradeOrderAsync = signedOrderJSON => {
   signedOrder.expirationTimestamp = new BigNumber(
     signedOrder.expirationTimestamp
   );
+
   signedOrder.makerFee = new BigNumber(signedOrder.makerFee);
   signedOrder.orderQty = new BigNumber(signedOrder.orderQty);
   signedOrder.price = new BigNumber(signedOrder.price);
@@ -172,32 +174,6 @@ const withdrawCollateralAsync = amount => {
         return res;
       });
   });
-};
-
-const tradeOrderAsync = signedOrderJSON => {
-  const { marketjs } = store.getState();
-  const web3 = store.getState().web3.web3Instance;
-  const signedOrder = JSON.parse(signedOrderJSON);
-
-  const txParams = {
-    from: web3.eth.coinbase
-  };
-
-  signedOrder.taker = web3.eth.coinbase;
-  signedOrder.expirationTimestamp = new BigNumber(
-    signedOrder.expirationTimestamp
-  );
-  signedOrder.makerFee = new BigNumber(signedOrder.makerFee);
-  signedOrder.orderQty = new BigNumber(signedOrder.orderQty);
-  signedOrder.price = new BigNumber(signedOrder.price);
-  signedOrder.remainingQty = new BigNumber(signedOrder.remainingQty);
-  signedOrder.takerFee = new BigNumber(signedOrder.takerFee);
-
-  marketjs
-    .tradeOrderAsync(signedOrder, signedOrder.orderQty, txParams)
-    .then(res => {
-      return res;
-    });
 };
 
 export const MarketJS = {

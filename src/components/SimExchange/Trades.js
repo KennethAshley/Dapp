@@ -28,7 +28,7 @@ class Trades extends Component {
       simExchange.contract.MARKET_COLLATERAL_POOL_ADDRESS
     ) {
       this.getUnallocatedCollateral(this.props);
-      this.getOrders(simExchange.contract.key);
+      // this.getOrders(simExchange.contract.key);
     }
   }
 
@@ -38,7 +38,7 @@ class Trades extends Component {
 
     if (newContract !== oldContract && newContract !== null) {
       this.getUnallocatedCollateral(this.props);
-      this.getOrders(this.props.simExchange.contract.key);
+      // this.getOrders(newContract.key);
     }
   }
 
