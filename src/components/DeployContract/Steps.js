@@ -562,6 +562,8 @@ class DeployStep extends BaseStepComponent {
   constructor(props) {
     super(props);
 
+    this.click = this.click.bind(this);
+
     this.stepKeys = [
       'Deploy Contract',
       'Deploy Collateral Pool & Link Contract',
@@ -599,10 +601,10 @@ class DeployStep extends BaseStepComponent {
 
     this.initialState = {
       currStepNum: 1,
-      activeStepKey: 'Deploy Contract',
+      activeStepKey: 'Contract Deployment',
       txHashes: {
         'Contract Deployment': null,
-        'Collateral Pool Deployment': null
+        'Deploy Collateral Pool & Link Contract': null
       }
     };
 
@@ -704,8 +706,8 @@ class DeployStep extends BaseStepComponent {
   onUpdateTxHashes(nextProps) {
     let { txHashes } = this.state;
 
-    txHashes['Contract Deployment'] = nextProps.contractDeploymentTxHash;
-    txHashes['Collateral Pool Deployment'] =
+    txHashes['Deploy Contract'] = nextProps.contractDeploymentTxHash;
+    txHashes['Deploy Collateral Pool & Link Contract'] =
       nextProps.collateralPoolDeploymentTxHash;
 
     this.setState({ txHashes });
@@ -718,6 +720,10 @@ class DeployStep extends BaseStepComponent {
     return 'loading';
   }
 
+  click(stepNum) {
+    this.setState({ currStepNum: stepNum });
+  }
+
   renderSteps(config, i) {
     let { currStepNum, txHashes } = this.state;
     let { key, description } = config;
@@ -727,9 +733,10 @@ class DeployStep extends BaseStepComponent {
     return (
       <Step
         key={i}
+        onClick={() => this.click(i)}
         title={key}
         icon={
-          currStepNum === i ? (
+          currStepNum === i && !txHash ? (
             <Icon
               type={this.getStepIcon(key)}
               style={{ color: '#00e2c1', fontSize: '33px' }}
@@ -808,21 +815,43 @@ class DeployStep extends BaseStepComponent {
                 </div>
               ) : (
                 <div>
-                  <p className={'deploy-step-description'}>
-                    Transaction Hash:
-                    {txHash ? (
-                      <a
-                        href={`${getEtherscanUrl(
-                          this.props.network
-                        )}/tx/${txHash}`}
-                        target={'_blank'}
-                      >
-                        {txHash}
-                      </a>
-                    ) : (
-                      'TBD'
-                    )}
-                  </p>
+                  <p className={'deploy-step-description'}>Transaction Hash:</p>
+                  {txHash ? (
+                    <div className="contract-result-input-container m-bottom-30">
+                      <Input
+                        className="contract-result-input"
+                        disabled
+                        value={txHash}
+                      />
+                      <ButtonGroup>
+                        <Tooltip
+                          placement="top"
+                          title={'Copy Contract Address'}
+                        >
+                          <Button
+                            type="primary"
+                            icon="copy"
+                            onClick={() => copyTextToClipboard(txHash)}
+                          />
+                        </Tooltip>
+                        <Tooltip
+                          placement="top"
+                          title={'View Contract in Etherscan'}
+                        >
+                          <Button
+                            type="primary"
+                            icon="link"
+                            href={`${getEtherscanUrl(
+                              this.props.network
+                            )}/address/${txHash}`}
+                            target={'_blank'}
+                          />
+                        </Tooltip>
+                      </ButtonGroup>
+                    </div>
+                  ) : (
+                    'TBD'
+                  )}
                   <h4>{description.title}</h4>
                   <p>{description.explanation}</p>
                 </div>
