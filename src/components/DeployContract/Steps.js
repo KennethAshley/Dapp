@@ -562,7 +562,7 @@ class DeployStep extends BaseStepComponent {
   constructor(props) {
     super(props);
 
-    this.click = this.click.bind(this);
+    this.gotoStep = this.gotoStep.bind(this);
 
     this.stepKeys = [
       'Deploy Contract',
@@ -601,7 +601,9 @@ class DeployStep extends BaseStepComponent {
 
     this.initialState = {
       currStepNum: 1,
+      selectedStep: 1,
       activeStepKey: 'Contract Deployment',
+      error: false,
       txHashes: {
         'Contract Deployment': null,
         'Deploy Collateral Pool & Link Contract': null
@@ -645,6 +647,7 @@ class DeployStep extends BaseStepComponent {
           `There was an error deploying the contract: ${nextProps.error}`,
           8
         );
+        this.setState({ error: nextProps.error });
       } else if (nextProps.contract) {
         // Contract was deployed
         this.props.showSuccessMessage(
@@ -692,7 +695,7 @@ class DeployStep extends BaseStepComponent {
         break;
       case 'rejected':
       case 'fulfilled':
-        currStepNum = 3;
+        currStepNum = this.state.currStepNum;
         break;
       default:
         currStepNum = 1;
@@ -717,15 +720,20 @@ class DeployStep extends BaseStepComponent {
     if (key === 'Deployment Results') {
       return this.props.contract ? 'check-circle-o' : 'close-circle-o';
     }
+
+    if (this.state.error) {
+      return 'close-circle-o';
+    }
+
     return 'loading';
   }
 
-  click(stepNum) {
-    this.setState({ currStepNum: stepNum });
+  gotoStep(stepNum) {
+    this.setState({ selectedStep: stepNum });
   }
 
   renderSteps(config, i) {
-    let { currStepNum, txHashes } = this.state;
+    let { currStepNum, txHashes, selectedStep } = this.state;
     let { key, description } = config;
 
     let txHash = txHashes[key];
@@ -733,13 +741,16 @@ class DeployStep extends BaseStepComponent {
     return (
       <Step
         key={i}
-        onClick={() => this.click(i)}
+        onClick={() => this.gotoStep(i)}
         title={key}
         icon={
           currStepNum === i && !txHash ? (
             <Icon
               type={this.getStepIcon(key)}
-              style={{ color: '#00e2c1', fontSize: '33px' }}
+              style={{
+                color: this.state.error ? '#FF0A0A' : '#00e2c1',
+                fontSize: '33px'
+              }}
             />
           ) : (
             ''
@@ -747,115 +758,127 @@ class DeployStep extends BaseStepComponent {
         }
         description={
           <div>
-            {currStepNum === i &&
-              (key === 'Deployment Results' ? (
-                <div>
-                  {this.props.contract ? (
-                    <div id={'contract-info-wrap'}>
-                      <h4>{'Your contract has successfully deployed!'}</h4>
-                      <p>Contract Address</p>
-                      <div className="contract-result-input-container m-bottom-30">
-                        <Input
-                          className="contract-result-input"
-                          disabled
-                          value={this.props.contract.address}
-                        />
-                        <ButtonGroup>
-                          <Tooltip
-                            placement="top"
-                            title={'Copy Contract Address'}
-                          >
-                            <Button
-                              type="primary"
-                              icon="copy"
-                              onClick={() =>
-                                copyTextToClipboard(this.props.contract.address)
-                              }
+            {!this.state.error ? (
+              <div>
+                {selectedStep === i &&
+                  (key === 'Deployment Results' ? (
+                    <div>
+                      {this.props.contract ? (
+                        <div id={'contract-info-wrap'}>
+                          <h4>{'Your contract has successfully deployed!'}</h4>
+                          <p>Contract Address</p>
+                          <div className="contract-result-input-container m-bottom-30">
+                            <Input
+                              className="contract-result-input"
+                              disabled
+                              value={this.props.contract.address}
                             />
-                          </Tooltip>
-                          <Tooltip
-                            placement="top"
-                            title={'View Contract in Etherscan'}
-                          >
+                            <ButtonGroup>
+                              <Tooltip
+                                placement="top"
+                                title={'Copy Contract Address'}
+                              >
+                                <Button
+                                  type="primary"
+                                  icon="copy"
+                                  onClick={() =>
+                                    copyTextToClipboard(
+                                      this.props.contract.address
+                                    )
+                                  }
+                                />
+                              </Tooltip>
+                              <Tooltip
+                                placement="top"
+                                title={'View Contract in Etherscan'}
+                              >
+                                <Button
+                                  type="primary"
+                                  icon="link"
+                                  href={`${getEtherscanUrl(
+                                    this.props.network
+                                  )}/address/${this.props.contract.address}`}
+                                  target={'_blank'}
+                                />
+                              </Tooltip>
+                            </ButtonGroup>
+                          </div>
+                          <Link to={'/contract/explorer'}>
+                            {'Explore All Contracts'}
+                          </Link>
+                        </div>
+                      ) : (
+                        <div>
+                          <h4>
+                            {'There was an error deploying your contract.'}
+                          </h4>
+
+                          <p className={'deploy-step-description'}>
+                            {this.state.error}
+                          </p>
+
+                          <div style={{ display: 'flex' }}>
                             <Button
-                              type="primary"
-                              icon="link"
-                              href={`${getEtherscanUrl(
-                                this.props.network
-                              )}/address/${this.props.contract.address}`}
-                              target={'_blank'}
-                            />
-                          </Tooltip>
-                        </ButtonGroup>
-                      </div>
-                      <Link to={'/contract/explorer'}>
-                        {'Explore All Contracts'}
-                      </Link>
+                              id={'retry-button'}
+                              type={'primary'}
+                              onClick={this.onRetry.bind(this)}
+                              style={{ padding: '0 50px' }}
+                            >
+                              {'Retry'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div>
-                      <h4>{'There was an error deploying your contract.'}</h4>
-
                       <p className={'deploy-step-description'}>
-                        {this.props.error}
+                        Transaction Hash:
                       </p>
-
-                      <div style={{ display: 'flex' }}>
-                        <Button
-                          id={'retry-button'}
-                          type={'primary'}
-                          onClick={this.onRetry.bind(this)}
-                          style={{ padding: '0 50px' }}
-                        >
-                          {'Retry'}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <p className={'deploy-step-description'}>Transaction Hash:</p>
-                  {txHash ? (
-                    <div className="contract-result-input-container m-bottom-30">
-                      <Input
-                        className="contract-result-input"
-                        disabled
-                        value={txHash}
-                      />
-                      <ButtonGroup>
-                        <Tooltip
-                          placement="top"
-                          title={'Copy Contract Address'}
-                        >
-                          <Button
-                            type="primary"
-                            icon="copy"
-                            onClick={() => copyTextToClipboard(txHash)}
+                      {txHash ? (
+                        <div className="contract-result-input-container m-bottom-30">
+                          <Input
+                            className="contract-result-input"
+                            disabled
+                            value={txHash}
                           />
-                        </Tooltip>
-                        <Tooltip
-                          placement="top"
-                          title={'View Contract in Etherscan'}
-                        >
-                          <Button
-                            type="primary"
-                            icon="link"
-                            href={`${getEtherscanUrl(
-                              this.props.network
-                            )}/address/${txHash}`}
-                            target={'_blank'}
-                          />
-                        </Tooltip>
-                      </ButtonGroup>
+                          <ButtonGroup>
+                            <Tooltip
+                              placement="top"
+                              title={'Copy Contract Address'}
+                            >
+                              <Button
+                                type="primary"
+                                icon="copy"
+                                onClick={() => copyTextToClipboard(txHash)}
+                              />
+                            </Tooltip>
+                            <Tooltip
+                              placement="top"
+                              title={'View Contract in Etherscan'}
+                            >
+                              <Button
+                                type="primary"
+                                icon="link"
+                                href={`${getEtherscanUrl(
+                                  this.props.network
+                                )}/address/${txHash}`}
+                                target={'_blank'}
+                              />
+                            </Tooltip>
+                          </ButtonGroup>
+                        </div>
+                      ) : (
+                        'TBD'
+                      )}
+                      <h4>{description.title}</h4>
+                      <p>{description.explanation}</p>
                     </div>
-                  ) : (
-                    'TBD'
-                  )}
-                  <h4>{description.title}</h4>
-                  <p>{description.explanation}</p>
-                </div>
-              ))}
+                  ))}
+              </div>
+            ) : (
+              <div>{currStepNum === i && <div>{this.state.error}</div>}</div>
+            )}
           </div>
         }
       />
@@ -867,7 +890,11 @@ class DeployStep extends BaseStepComponent {
       <div className="step-container" id="deploy-step">
         <h1>Deploying Contracts</h1>
         <div className="step-inner-container" style={{ padding: '50px' }}>
-          <Steps direction="vertical" current={this.state.currStepNum - 1}>
+          <Steps
+            direction="vertical"
+            current={this.state.currStepNum - 1}
+            status={this.state.error ? 'error' : ''}
+          >
             {this.stepKeys.map((key, i) =>
               this.renderSteps(this.stepConfig[key], i + 1)
             )}
