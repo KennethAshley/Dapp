@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import BigNumber from 'bignumber.js';
 
 import { Utils } from '@marketprotocol/marketjs';
+import _ from 'lodash';
 
 import Field, { FieldSettings } from './DeployContractField';
 import DeployContractSuccess from './DeployContractSuccess';
@@ -564,27 +565,23 @@ class DeployStep extends BaseStepComponent {
 
     this.gotoStep = this.gotoStep.bind(this);
 
-    this.stepKeys = [
-      'Deploy Contract',
-      'Deploy Collateral Pool & Link Contract',
-      'Deployment Results'
-    ];
-
-    this.stepConfig = {
-      'Deploy Contract': {
+    this.steps = [
+      {
         key: 'Deploy Contract',
         stepNum: 1,
         completed: false,
+        error: false,
         description: {
           title: 'Deploying your MarketContract',
           explanation: `The MarketContract is the main contract responsible for facilitating many to many trading. Your customized contract is about to be deployed to the Ethereum blockchain and will soon be tradeable!
             We want other's to be able to find your awesome new contract, and are adding it to our registry so it will show up in the Contract Explorer page.`
         }
       },
-      'Deploy Collateral Pool & Link Contract': {
+      {
         key: 'Deploy Collateral Pool & Link Contract',
         stepNum: 2,
         completed: false,
+        error: false,
         description: {
           title:
             'Deploying a new Collateral Pool for your contract & linking the same to your contract',
@@ -592,20 +589,19 @@ class DeployStep extends BaseStepComponent {
              Finally, we must link your newly deployed contracts together to ensure all functionality is in place. Shortly, your contract will be all set for use. Happy Trading!`
         }
       },
-      'Deployment Results': {
+      {
         key: 'Deployment Results',
         stepNum: 3,
         completed: false
       }
-    };
+    ];
 
     this.initialState = {
       currStepNum: 1,
-      selectedStep: 1,
-      activeStepKey: 'Contract Deployment',
+      activeStepKey: 'Deploy Contract',
       error: false,
       txHashes: {
-        'Contract Deployment': null,
+        'Deploy Contract': null,
         'Deploy Collateral Pool & Link Contract': null
       }
     };
@@ -634,8 +630,14 @@ class DeployStep extends BaseStepComponent {
    *    exposed in 'props.contract'.
   **/
   componentWillReceiveProps(nextProps) {
+    const currentStep = _.find(this.steps, { stepNum: this.state.currStepNum });
+
     if (this.props.currentStep !== nextProps.currentStep) {
       this.onUpdateCurrStep(nextProps.currentStep);
+    }
+
+    if (nextProps.error) {
+      currentStep.error = nextProps.error;
     }
 
     this.onUpdateTxHashes(nextProps);
@@ -729,26 +731,32 @@ class DeployStep extends BaseStepComponent {
   }
 
   gotoStep(stepNum) {
-    this.setState({ selectedStep: stepNum });
+    this.setState({ currStepNum: stepNum });
   }
 
-  renderSteps(config, i) {
-    let { currStepNum, txHashes, selectedStep } = this.state;
-    let { key, description } = config;
+  renderStep(step) {
+    const {
+      key,
+      stepNum,
+      error,
+      description: { title = '', explanation = '' } = {}
+    } = step;
 
+    let { currStepNum, txHashes } = this.state;
     let txHash = txHashes[key];
 
     return (
       <Step
-        key={i}
-        onClick={() => this.gotoStep(i)}
+        key={key}
         title={key}
+        status={error ? 'error' : ''}
+        onClick={() => this.gotoStep(stepNum)}
         icon={
-          currStepNum === i && !txHash ? (
+          stepNum === currStepNum && !txHash ? (
             <Icon
               type={this.getStepIcon(key)}
               style={{
-                color: this.state.error ? '#FF0A0A' : '#00e2c1',
+                color: error ? '#FF0A0A' : '#00e2c1',
                 fontSize: '33px'
               }}
             />
@@ -758,9 +766,9 @@ class DeployStep extends BaseStepComponent {
         }
         description={
           <div>
-            {!this.state.error ? (
+            {!error ? (
               <div>
-                {selectedStep === i &&
+                {currStepNum === stepNum &&
                   (key === 'Deployment Results' ? (
                     <div>
                       {this.props.contract ? (
@@ -813,9 +821,7 @@ class DeployStep extends BaseStepComponent {
                             {'There was an error deploying your contract.'}
                           </h4>
 
-                          <p className={'deploy-step-description'}>
-                            {this.state.error}
-                          </p>
+                          <p className={'deploy-step-description'}>{error}</p>
 
                           <div style={{ display: 'flex' }}>
                             <Button
@@ -871,13 +877,13 @@ class DeployStep extends BaseStepComponent {
                       ) : (
                         'TBD'
                       )}
-                      <h4>{description.title}</h4>
-                      <p>{description.explanation}</p>
+                      <h4>{title}</h4>
+                      <p>{explanation}</p>
                     </div>
                   ))}
               </div>
             ) : (
-              <div>{currStepNum === i && <div>{this.state.error}</div>}</div>
+              <div>{currStepNum === stepNum && <div>{error}</div>}</div>
             )}
           </div>
         }
@@ -890,14 +896,8 @@ class DeployStep extends BaseStepComponent {
       <div className="step-container" id="deploy-step">
         <h1>Deploying Contracts</h1>
         <div className="step-inner-container" style={{ padding: '50px' }}>
-          <Steps
-            direction="vertical"
-            current={this.state.currStepNum - 1}
-            status={this.state.error ? 'error' : ''}
-          >
-            {this.stepKeys.map((key, i) =>
-              this.renderSteps(this.stepConfig[key], i + 1)
-            )}
+          <Steps direction="vertical" current={this.state.currStepNum - 1}>
+            {this.steps.map(step => this.renderStep(step))}
           </Steps>
         </div>
       </div>
